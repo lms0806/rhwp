@@ -246,7 +246,10 @@ impl Paginator {
                         p.controls.iter().any(|c|
                             matches!(c, Control::Equation(_)) ||
                             matches!(c, Control::Picture(pic) if pic.common.treat_as_char) ||
-                            matches!(c, Control::Shape(s) if s.common().treat_as_char))
+                            matches!(c, Control::Shape(s) if s.common().treat_as_char) ||
+                            // 글앞으로/글뒤로 Shape: vpos에 Shape 높이가 포함되어 과대 → bypass
+                            matches!(c, Control::Shape(s) if matches!(s.common().text_wrap,
+                                crate::model::shape::TextWrap::InFrontOfText | crate::model::shape::TextWrap::BehindText)))
                     }).unwrap_or(false);
                     if !prev_has_tac_eq {
                     if let Some(base) = st.page_vpos_base {

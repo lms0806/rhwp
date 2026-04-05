@@ -1313,6 +1313,13 @@ impl LayoutEngine {
             if !shape_jumped && !prev_tac_seg_applied {
             if let Some(prev_pi) = prev_layout_para {
                 if item_para != prev_pi {
+                    // 글앞으로/글뒤로 Shape가 있는 문단: vpos에 Shape 높이가 포함되어 과대 → bypass
+                    let prev_has_overlay_shape = paragraphs.get(prev_pi).map(|p| {
+                        p.controls.iter().any(|c|
+                            matches!(c, Control::Shape(s) if matches!(s.common().text_wrap,
+                                crate::model::shape::TextWrap::InFrontOfText | crate::model::shape::TextWrap::BehindText)))
+                    }).unwrap_or(false);
+                    if !prev_has_overlay_shape {
                     if let Some(prev_para) = paragraphs.get(prev_pi) {
                         let prev_seg = prev_para.line_segs.iter().rev().find(|ls| {
                             ls.segment_width > 0 && (ls.segment_width - col_width_hu).abs() < 3000
@@ -1354,6 +1361,7 @@ impl LayoutEngine {
                     }
                 }
             }
+            } // !prev_has_overlay_shape
             } // !shape_jumped
             prev_layout_para = Some(item_para);
 
@@ -2170,12 +2178,27 @@ impl LayoutEngine {
         let pt_mt = measured_tables.iter().find(|mt|
             mt.para_index == para_index && mt.control_index == control_index
         );
+        // 비-TAC 자리차지 표에서 vert offset이 있으면 문단 시작 y 전달
+        // layout_partial_table 내부에서 vert_offset을 적용하므로 이중 적용 방지
+        let pt_y_start = if let Some(para) = paragraphs.get(para_index) {
+            if let Some(Control::Table(t)) = para.controls.get(control_index) {
+                if !t.common.treat_as_char
+                    && matches!(t.common.text_wrap, crate::model::shape::TextWrap::TopAndBottom)
+                    && matches!(t.common.vert_rel_to, crate::model::shape::VertRelTo::Para)
+                    && t.common.vertical_offset > 0
+                {
+                    para_start_y.get(&para_index).copied().unwrap_or(y_offset)
+                } else {
+                    y_offset
+                }
+            } else { y_offset }
+        } else { y_offset };
         let pt_y_before = y_offset;
         y_offset = self.layout_partial_table(
             tree, col_node, paragraphs,
             para_index, control_index,
             page_content.section_index, styles, col_area,
-            y_offset, bin_data_content,
+            pt_y_start, bin_data_content,
             start_row, end_row, is_continuation,
             split_start_content_offset, split_end_content_limit,
             pt_margin_left, pt_margin_right, pt_mt,
