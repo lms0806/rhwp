@@ -429,6 +429,14 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 
 본 제품은 한글과컴퓨터의 한글 문서 파일(.hwp) 공개 문서를 참고하여 개발하였습니다.
 
+## Trademark
+
+"한글", "한컴", "HWP", "HWPX"는 주식회사 한글과컴퓨터의 등록 상표입니다.
+본 프로젝트는 한글과컴퓨터와 제휴, 후원, 승인 관계가 없는 독립적인 오픈소스 프로젝트입니다.
+
+"Hangul", "Hancom", "HWP", and "HWPX" are registered trademarks of Hancom Inc.
+This project is an independent open-source project with no affiliation, sponsorship, or endorsement by Hancom Inc.
+
 ## License
 
 [MIT License](LICENSE) — Copyright (c) 2025-2026 Edward Kim
